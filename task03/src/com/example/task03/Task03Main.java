@@ -1,11 +1,10 @@
 package com.example.task03;
 
-import java.io.FileInputStream;
-import java.io.IOException;
-import java.io.InputStream;
+import java.io.*;
+import java.nio.*;
 import java.nio.charset.Charset;
-import java.util.List;
-import java.util.Set;
+import java.util.*;
+import java.util.stream.Collectors;
 
 public class Task03Main {
 
@@ -19,6 +18,60 @@ public class Task03Main {
     }
 
     public static List<Set<String>> findAnagrams(InputStream inputStream, Charset charset) {
-        return null;
+        Map<String, Set<String>> anagramMap = new HashMap<>();
+        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream, charset)))
+        {
+            String line;
+            while ((line = reader.readLine()) != null) {
+                String word = line.trim().toLowerCase();
+                if (isValidWord(word)) {
+                    String sortedWord = sortWord(word);
+                    anagramMap.computeIfAbsent(sortedWord, C -> new HashSet<>()).add(word);
+                }
+            }
+        }catch (IOException e) {
+            e.printStackTrace();
+        }
+        return processAnagramMap(anagramMap);
+    }
+    public static List<Set<String>> processAnagramMap(Map<String, Set<String>> anagramMap) {
+        List<Set<String>> result = new ArrayList<>();
+        Collection<Set<String>> values = anagramMap.values();
+        Iterator<Set<String>> valuesIterator = values.iterator();
+        while (valuesIterator.hasNext()) {
+            Set<String> set = valuesIterator.next();
+            if (set.size() > 1) {
+                List<String> sortedList = new ArrayList<>(set);
+                Collections.sort(sortedList);
+                Set<String> sortedSet = new LinkedHashSet<>(sortedList);
+                result.add(sortedSet);
+            }
+        }
+        Collections.sort(result, new Comparator<Set<String>>() {
+            @Override
+            public int compare(Set<String> set1, Set<String> set2) {
+                return set1.iterator().next().compareTo(set2.iterator().next());
+            }
+        });
+        return result;
+    }
+    private static boolean isValidWord(String word) {
+        if (word.length() < 3) {
+            return false;
+        }
+        for (char c : word.toCharArray()) {
+            if (!Character.isLetter(c) || !Character.UnicodeBlock.of(c).equals(Character.UnicodeBlock.CYRILLIC)) {
+                return false;
+            }
+        }
+        return true;
+    }
+    private static String sortWord(String word) {
+        char[] chars = word.toCharArray();
+        Arrays.sort(chars);
+        return new String(chars);
     }
 }
+
+
+
